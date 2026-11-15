@@ -1,4 +1,3 @@
-
 #include "game.h"
 #include "maze.h"
 #include "pixel_art.h"
@@ -102,6 +101,9 @@ void InitializeLevel(GameState &game, int level)
 
     game.exitUnlocked = false;
 
+    // Always begin a newly initialized level unpaused.
+    game.isPaused = false;
+
     // Restore three lives at the beginning
     // of every new level.
     game.lives = MAX_LIVES;
@@ -147,7 +149,7 @@ void InitializeGame(GameState &game)
 
 void UpdateGame(GameState &game, Player &player)
 {
-    if (game.status != PLAYING)
+    if (game.status != PLAYING || game.isPaused)
         return;
 
     // Update temporary invulnerability.

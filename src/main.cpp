@@ -11,6 +11,40 @@
 #include "pixel_art.h"
 
 // --------------------------------------------------
+// CONVERT WINDOW MOUSE POSITION TO GAME COORDINATES
+// --------------------------------------------------
+
+static Vector2 GetLogicalMousePosition(
+    int gameWidth,
+    int gameHeight
+)
+{
+    float scaleX =
+        (float)GetScreenWidth() / gameWidth;
+
+    float scaleY =
+        (float)GetScreenHeight() / gameHeight;
+
+    float scale = scaleX < scaleY ? scaleX : scaleY;
+
+    float displayWidth = gameWidth * scale;
+    float displayHeight = gameHeight * scale;
+
+    float offsetX =
+        (GetScreenWidth() - displayWidth) / 2.0f;
+
+    float offsetY =
+        (GetScreenHeight() - displayHeight) / 2.0f;
+
+    Vector2 mouse = GetMousePosition();
+
+    return {
+        (mouse.x - offsetX) / scale,
+        (mouse.y - offsetY) / scale
+    };
+}
+
+// --------------------------------------------------
 // CONFIGURE ENEMIES FOR THE CURRENT LEVEL
 // --------------------------------------------------
 
@@ -423,6 +457,62 @@ int main()
         }
 
         // --------------------------------
+        // PAUSE INPUT
+        // --------------------------------
+
+        if (
+            currentScreen == GAMEPLAY &&
+            !IsTransitionActive(transition) &&
+            game.status == PLAYING
+        )
+        {
+            Vector2 mousePosition =
+                GetLogicalMousePosition(gameWidth, gameHeight);
+
+            Rectangle pauseButton = {
+                925, 20, 55, 38
+            };
+
+            Rectangle resumeButton = {
+                400, 390, 200, 54
+            };
+
+            bool pauseKeyPressed =
+                IsKeyPressed(KEY_P) ||
+                IsKeyPressed(KEY_ESCAPE);
+
+            bool pauseButtonClicked =
+                CheckCollisionPointRec(
+                    mousePosition,
+                    pauseButton
+                ) &&
+                IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
+
+            bool resumeButtonClicked =
+                game.isPaused &&
+                CheckCollisionPointRec(
+                    mousePosition,
+                    resumeButton
+                ) &&
+                IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
+
+            if (game.isPaused)
+            {
+                if (pauseKeyPressed || resumeButtonClicked)
+                {
+                    game.isPaused = false;
+                }
+            }
+            else
+            {
+                if (pauseKeyPressed || pauseButtonClicked)
+                {
+                    game.isPaused = true;
+                }
+            }
+        }
+
+        // --------------------------------
         // GAMEPLAY UPDATE
         // --------------------------------
 
@@ -431,7 +521,7 @@ int main()
             !IsTransitionActive(transition)
         )
         {
-            if (game.status == PLAYING)
+            if (game.status == PLAYING && !game.isPaused)
             {
                 // Update player movement.
                 UpdatePlayer(player);
@@ -591,7 +681,7 @@ int main()
         // UPDATE PARTICLE AND EVENT EFFECTS
         // --------------------------------
 
-        if (currentScreen == GAMEPLAY)
+        if (currentScreen == GAMEPLAY && !game.isPaused)
         {
             UpdateEffects(effects);
         }
@@ -692,6 +782,100 @@ int main()
             DrawEffects(effects);
 
             DrawHUD(game);
+
+            // --------------------------------
+            // PAUSE BUTTON
+            // --------------------------------
+
+            DrawRectangle(
+                925, 20,
+                55, 38,
+                PIXEL_NAVY
+            );
+
+            DrawRectangleLinesEx(
+                Rectangle{925, 20, 55, 38},
+                2,
+                PIXEL_CYAN
+            );
+
+            // Two vertical bars forming the pause icon.
+            DrawRectangle(
+                942, 29,
+                5, 19,
+                PIXEL_CYAN
+            );
+
+            DrawRectangle(
+                957, 29,
+                5, 19,
+                PIXEL_CYAN
+            );
+
+            // --------------------------------
+            // PAUSE OVERLAY
+            // --------------------------------
+
+            if (game.isPaused)
+            {
+                // Dim the background.
+                DrawRectangle(
+                    0, 0,
+                    gameWidth, gameHeight,
+                    Color{8, 8, 16, 200}
+                );
+
+                // Main pause panel.
+                DrawRectangle(
+                    300, 245,
+                    400, 210,
+                    PIXEL_NAVY
+                );
+
+                DrawRectangleLinesEx(
+                    Rectangle{300, 245, 400, 210},
+                    3,
+                    PIXEL_CYAN
+                );
+
+                // Heading.
+                DrawPixelTextCentered(
+                    "PAUSED",
+                    500,
+                    285,
+                    5,
+                    PIXEL_CYAN
+                );
+
+                // Resume button.
+                DrawRectangle(
+                    400, 390,
+                    200, 54,
+                    PIXEL_BLUE
+                );
+
+                DrawRectangleLinesEx(
+                    Rectangle{400, 390, 200, 54},
+                    2,
+                    PIXEL_CYAN
+                );
+
+                DrawPixelTextCentered(
+                    "RESUME",
+                    500,
+                    408,
+                    2,
+                    PIXEL_WHITE
+                );
+
+                DrawPixelTextCentered(
+                    "PRESS P OR ESC",
+                    500,
+                    465,
+                    1,
+                    PIXEL_LIGHT_GRAY
+                );
+            }
         }
 
         // --------------------------------
