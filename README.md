@@ -123,6 +123,7 @@ MazeRunner/
 │   └── pixel_art.h
 │
 ├── README.md
+├── index.html
 └── maze_runner.exe
 ```
 
@@ -135,6 +136,8 @@ To compile and run the project, you need:
 - Raylib library installed and configured.
 - MSYS2 UCRT64 environment or an equivalent Raylib-compatible setup.
 
+You can also build the project using CMake as well.
+
 ## Compilation
 
 Open PowerShell or the VS Code terminal in the project directory and run:
@@ -144,6 +147,12 @@ g++ -Wall -Wextra -Wpedantic src/main.cpp src/maze.cpp src/player.cpp src/game.c
 ```
 
 The compiler warning flags enable additional checks during compilation.
+
+To compile with CMake, simply run:
+```bash
+cmake -B build
+cmake --build build
+```
 
 ## Running the Game
 
